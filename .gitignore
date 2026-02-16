@@ -107,7 +107,6 @@ htmlcov/
 dmypy.json
 
 # Documentation
-CLAUDE.md
 plan.md
 *_plan.md
 design.md
