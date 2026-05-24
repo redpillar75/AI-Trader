@@ -4,11 +4,16 @@ on:
   push:
     branches: ['claude/install-agent-skills-xpmqI']
 
+permissions:
+  contents: write
+
 jobs:
   transcribe:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if transcript already exists
         id: check
@@ -36,12 +41,17 @@ jobs:
         run: |
           whisper audio_temp_transcribe.mp3 --model small --language en --output_format txt --output_dir /tmp/
           cp /tmp/audio_temp_transcribe.txt transcript.txt
+          echo "=== TRANSCRIPT ==="
+          cat transcript.txt
 
       - name: Commit transcript
         if: steps.check.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/redpillar75/AI-Trader.git
           git add transcript.txt
           git diff --staged --quiet || git commit -m "feat: add audio transcript [skip ci]"
           git push
