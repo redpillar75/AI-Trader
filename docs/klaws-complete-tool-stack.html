@@ -1,0 +1,1565 @@
+<!doctype html>
+<html lang="en" data-theme="paper">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KLAWS Complete Tool Stack — 2026 Edition</title>
+  <style>
+    :root {
+      --paper: #f3efe4;
+      --ink: #0b0b0b;
+      --accent-a: #f28cc2;
+      --accent-b: #f1cb3c;
+      --accent-c: #188f5a;
+      --accent-d: #ff7f2a;
+      --accent-e: #3a7bd5;
+      --card-shadow: 8px 8px 0 var(--ink);
+    }
+    html[data-theme="dark"] {
+      --paper: #111216;
+      --ink: #f3efe4;
+      --accent-a: #ff9ad0;
+      --accent-b: #ffd84f;
+      --accent-c: #2fbf7a;
+      --accent-d: #ff9852;
+      --accent-e: #6faaf5;
+      --card-shadow: 8px 8px 0 #000;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; min-height: 100%; }
+    body {
+      font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      transition: background .3s, color .3s;
+    }
+    .app {
+      width: min(1380px, 96vw);
+      margin: 20px auto 30px;
+      border: 3px solid var(--ink);
+      background: var(--paper);
+      box-shadow: var(--card-shadow);
+      padding: 16px 16px 22px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 2px dashed var(--ink);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .kicker { font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    .controls { display: flex; gap: 7px; flex-wrap: wrap; }
+    button {
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    button:hover { background: var(--ink); color: var(--paper); }
+    button:focus-visible { outline: 3px solid var(--accent-d); outline-offset: 2px; }
+
+    /* ── viewport ── */
+    .viewport {
+      position: relative;
+      min-height: 680px;
+      border: 2px solid var(--ink);
+      overflow: hidden;
+    }
+    .scene {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: translateX(36px);
+      pointer-events: none;
+      transition: opacity .35s ease, transform .35s ease;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .scene.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    /* ── typography ── */
+    .display {
+      margin: 0 0 14px;
+      font-size: clamp(36px, 6vw, 90px);
+      line-height: .93;
+      text-transform: uppercase;
+      letter-spacing: -.03em;
+      font-weight: 900;
+    }
+    .display span { color: var(--accent-d); }
+    .lead { max-width: 560px; font-size: 17px; line-height: 1.48; font-weight: 600; }
+    .sec-title {
+      font-size: clamp(26px, 4vw, 54px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -.02em;
+      margin: 0 0 16px;
+      line-height: .95;
+    }
+    .label { font-size: 10px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 6px; }
+
+    /* ── scene 0: hero ── */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: center;
+      min-height: 560px;
+    }
+    .art-board {
+      border: 3px solid var(--ink);
+      min-height: 460px;
+      background: var(--accent-c);
+      position: relative;
+      box-shadow: var(--card-shadow);
+    }
+    .layer {
+      position: absolute;
+      width: 56%; height: 56%;
+      border: 3px solid var(--ink);
+      box-shadow: 6px 6px 0 var(--ink);
+      left: 22%; top: 18%;
+    }
+    .layer.l1 { background: var(--accent-a); transform: translate(-26px,-24px); }
+    .layer.l2 { background: var(--accent-d); transform: translate(18px,16px); }
+    .layer.l3 { background: var(--paper); transform: rotate(-6deg); }
+    .stat-row { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
+    .stat { border: 3px solid var(--ink); padding: 10px 18px; box-shadow: 4px 4px 0 var(--ink); }
+    .stat-n { font-size: 42px; font-weight: 900; line-height: 1; color: var(--accent-d); }
+    .stat-l { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .tag {
+      border: 2px solid var(--ink);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .tag.new { background: var(--accent-b); }
+    .tag.core { background: var(--accent-c); color: var(--paper); }
+
+    /* ── tier cards (scene 1-4) ── */
+    .tier-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid var(--ink);
+    }
+    .tier-badge {
+      border: 3px solid var(--ink);
+      padding: 6px 14px;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .tier-badge.t1 { background: var(--accent-c); color: var(--paper); }
+    .tier-badge.t2 { background: var(--accent-e); color: var(--paper); }
+    .tier-badge.t3 { background: var(--accent-d); }
+    .tier-badge.t4 { background: var(--accent-a); }
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .tool-card {
+      border: 2px solid var(--ink);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: var(--paper);
+      box-shadow: 3px 3px 0 var(--ink);
+      transition: transform .15s;
+    }
+    .tool-card:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--ink); }
+    .tool-name { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
+    .tool-meta { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; opacity: .6; }
+    .tool-desc { font-size: 12px; font-weight: 600; line-height: 1.45; }
+    .tool-uses { margin-top: 4px; padding-top: 6px; border-top: 1px dashed var(--ink); }
+    .tool-uses li { font-size: 11px; font-weight: 600; margin: 2px 0 2px 14px; line-height: 1.4; }
+    .chip {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      border: 1.5px solid var(--ink);
+      padding: 1px 6px;
+      margin-top: 4px;
+    }
+    .chip.official { background: var(--accent-b); }
+    .chip.community { background: #e8e8e8; }
+    .chip.new { background: var(--accent-a); }
+
+    /* ── scene 5: your stack ── */
+    .mapping-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .mapping-table th {
+      background: var(--ink); color: var(--paper);
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .mapping-table td { padding: 8px 10px; border-bottom: 1px solid var(--ink); font-weight: 600; }
+    .mapping-table tr:nth-child(even) td { background: rgba(0,0,0,.03); }
+    .t-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      border: 1.5px solid var(--ink);
+    }
+    .t-badge.t1 { background: var(--accent-c); color: var(--paper); }
+    .t-badge.t2 { background: var(--accent-e); color: var(--paper); }
+    .t-badge.t3 { background: var(--accent-d); }
+    .t-badge.t4 { background: var(--accent-a); }
+
+    /* ── scene 6: pillars ── */
+    .pillar-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+    .pillar-card {
+      border: 3px solid var(--ink);
+      padding: 14px;
+      box-shadow: 5px 5px 0 var(--ink);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 440px;
+    }
+    .pillar-card:nth-child(1) { background: var(--accent-c); color: var(--paper); }
+    .pillar-card:nth-child(2) { background: var(--accent-e); color: var(--paper); }
+    .pillar-card:nth-child(3) { background: var(--accent-b); }
+    .pillar-card:nth-child(4) { background: var(--accent-d); }
+    .pillar-card:nth-child(5) { background: var(--accent-a); }
+    .pillar-letter { font-size: 72px; font-weight: 900; line-height: .9; }
+    .pillar-name { font-size: 13px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+    .pillar-tools { font-size: 11px; font-weight: 700; line-height: 1.6; margin-top: 6px; }
+
+    /* ── scene 7: revenue + bootcamp ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .rev-card {
+      border: 3px solid var(--ink);
+      padding: 14px;
+      box-shadow: 5px 5px 0 var(--ink);
+    }
+    .rev-card:nth-child(1) { background: var(--accent-c); color: var(--paper); }
+    .rev-card:nth-child(2) { background: var(--accent-e); color: var(--paper); }
+    .rev-card:nth-child(3) { background: var(--accent-d); }
+    .rev-card:nth-child(4) { background: var(--accent-a); }
+    .rev-title { font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .rev-list li { font-size: 12px; font-weight: 700; margin: 4px 0 4px 14px; }
+    .phase-row { display: flex; flex-direction: column; gap: 8px; }
+    .phase {
+      border: 2px solid var(--ink);
+      padding: 10px 12px;
+      font-weight: 700;
+      font-size: 12px;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+    .phase strong { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 3px; }
+    .phase.p1 { background: var(--accent-c); color: var(--paper); }
+    .phase.p2 { background: var(--accent-e); color: var(--paper); }
+    .phase.p3 { background: var(--accent-b); }
+    .phase.p4 { background: var(--accent-d); }
+
+    /* ── footer ── */
+    .footer {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .dots { display: flex; gap: 6px; flex-wrap: wrap; }
+    .dot-btn {
+      width: 22px; height: 22px;
+      border-radius: 999px;
+      padding: 0;
+      font-size: 10px;
+      font-weight: 800;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+    }
+    .dot-btn.active { background: var(--ink); color: var(--paper); }
+    .meta { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+
+    /* ── print ── */
+    @media print {
+      .topbar .controls, .footer { display: none; }
+      .scene { position: relative; opacity: 1 !important; transform: none !important; pointer-events: auto; page-break-after: always; }
+      .viewport { min-height: unset; overflow: visible; position: static; border: none; }
+    }
+    @media (max-width: 980px) {
+      .hero-grid, .two-col { grid-template-columns: 1fr; }
+      .pillar-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .pillar-grid { grid-template-columns: 1fr; }
+      .tool-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="kicker">KLAWS Complete Tool Stack · 2026 Edition · Updated June 2026</div>
+    <div class="controls">
+      <button id="prevBtn">← Prev</button>
+      <button id="nextBtn">Next →</button>
+      <button id="themeBtn">◐ Theme</button>
+      <button id="paletteBtn">◉ Palette</button>
+      <button id="printBtn">⊞ Print PDF</button>
+    </div>
+  </div>
+
+  <div class="viewport">
+
+    <!-- SCENE 0: HERO -->
+    <section class="scene active" data-scene="0">
+      <div class="hero-grid">
+        <div>
+          <p class="kicker">Vol. 02 / Edition June 2026</p>
+          <h1 class="display">KLAWS<br><span>Tool Stack</span></h1>
+          <p class="lead">The complete reference for all MCP tools, agents, skills, and integrations across the KLAWS architecture. 4 tiers. 80+ tools. 1 unified protocol.</p>
+          <div class="stat-row">
+            <div class="stat"><div class="stat-n">80+</div><div class="stat-l">Total Tools</div></div>
+            <div class="stat"><div class="stat-n">4</div><div class="stat-l">Tiers</div></div>
+            <div class="stat"><div class="stat-n">5</div><div class="stat-l">Pillars</div></div>
+            <div class="stat"><div class="stat-n">454</div><div class="stat-l">Skills</div></div>
+          </div>
+          <div class="tag-row">
+            <span class="tag new">+ Higgsfield AI</span>
+            <span class="tag new">+ HuggingFace MCP</span>
+            <span class="tag new">+ Domain Tools</span>
+            <span class="tag new">+ AI Video Pipeline</span>
+            <span class="tag core">GitHub ✓ Substrate</span>
+            <span class="tag core">OPEN KLAW Sovereignty</span>
+          </div>
+        </div>
+        <div class="art-board">
+          <div class="layer l1"></div>
+          <div class="layer l2"></div>
+          <div class="layer l3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 1: TIER 1 -->
+    <section class="scene" data-scene="1">
+      <div class="tier-header">
+        <div>
+          <p class="label">Tier 1 · 18 Tools</p>
+          <h2 class="sec-title">Substrate<br>Foundation</h2>
+          <p class="lead" style="font-size:14px;max-width:600px;">The absolute base layer. Nothing in the stack runs without these. Install Week 1. Never remove.</p>
+        </div>
+        <span class="tier-badge t1">Substrate — Must Have</span>
+      </div>
+      <div class="tool-grid">
+
+        <div class="tool-card">
+          <div class="tool-name">Filesystem MCP</div>
+          <div class="tool-meta">10K+ stars · Official</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Local file read/write/delete. The foundation of all persistent operations. Claude's hands on disk.</div>
+          <ul class="tool-uses">
+            <li>Read/write project files without shell access</li>
+            <li>Batch rename or move assets</li>
+            <li>Search file trees for patterns</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">GitHub MCP</div>
+          <div class="tool-meta">28.3K+ stars · 889K DL · Official</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Full GitHub API — repos, PRs, issues, files, branches, CI. The single most-used substrate tool.</div>
+          <ul class="tool-uses">
+            <li>Create PRs and issues from Claude</li>
+            <li>Read any file in any public or authorized repo</li>
+            <li>Trigger GitHub Actions workflows</li>
+            <li>Post inline review comments</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Git MCP</div>
+          <div class="tool-meta">Official Anthropic</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Local git operations — status, diff, log, commit, branch. Works on any local repo.</div>
+          <ul class="tool-uses">
+            <li>Inspect uncommitted changes before acting</li>
+            <li>Read commit history for context</li>
+            <li>Create and switch branches locally</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Fetch MCP</div>
+          <div class="tool-meta">Official Anthropic</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Retrieve any web URL as text or markdown. Essential for reading docs, APIs, and live data.</div>
+          <ul class="tool-uses">
+            <li>Fetch API documentation pages</li>
+            <li>Pull markdown content from any URL</li>
+            <li>Retrieve raw JSON from REST endpoints</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Memory MCP</div>
+          <div class="tool-meta">Official Anthropic</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Knowledge graph with entities and relations that persist across sessions. Claude's long-term memory.</div>
+          <ul class="tool-uses">
+            <li>Remember project decisions across sessions</li>
+            <li>Build user profiles and preferences</li>
+            <li>Track entities in long-running workflows</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Sequential Thinking MCP</div>
+          <div class="tool-meta">Official Anthropic</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Structured multi-step reasoning scaffold. Forces explicit intermediate steps before conclusions.</div>
+          <ul class="tool-uses">
+            <li>Complex planning with branching dependencies</li>
+            <li>Root cause analysis chains</li>
+            <li>Multi-hypothesis research problems</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Context7 MCP</div>
+          <div class="tool-meta">Community · 5K+ stars</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Pulls up-to-date library docs directly into context. Eliminates hallucinated API references.</div>
+          <ul class="tool-uses">
+            <li>Get current React/Next.js API docs mid-task</li>
+            <li>Look up any npm package's latest methods</li>
+            <li>Resolve version-specific breaking changes</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Brave Search MCP</div>
+          <div class="tool-meta">Official Brave · Independent Index</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Independent web search not filtered by Google/Bing. Best for privacy-first and unbiased results.</div>
+          <ul class="tool-uses">
+            <li>Research topics without filter bubbles</li>
+            <li>Find recent news and releases</li>
+            <li>Cross-verify information from other search engines</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Tavily MCP</div>
+          <div class="tool-meta">1.4K stars · #1 AgentRank</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">AI-native search designed for agents. Returns clean, structured results optimized for LLM consumption.</div>
+          <ul class="tool-uses">
+            <li>Deep research with extracted content</li>
+            <li>Agent-ready search with source citations</li>
+            <li>Real-time news and data retrieval</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Exa MCP</div>
+          <div class="tool-meta">4K stars · Semantic Neural Search</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Neural search engine that understands meaning, not just keywords. Best for concept-based research.</div>
+          <ul class="tool-uses">
+            <li>Find similar companies/products semantically</li>
+            <li>Research paper and academic discovery</li>
+            <li>Concept-matching across large corpora</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Playwright MCP</div>
+          <div class="tool-meta">6.1K+ searches/mo · Multi-browser</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Full browser automation across Chrome, Firefox, Safari. Click, fill, screenshot, scrape.</div>
+          <ul class="tool-uses">
+            <li>E2E testing with real browser interactions</li>
+            <li>Screenshot any web page for review</li>
+            <li>Scrape JavaScript-rendered content</li>
+            <li>Automate login and form submission flows</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Puppeteer MCP</div>
+          <div class="tool-meta">Official · Chrome Automation</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Headless Chrome control via DevTools Protocol. Lighter than Playwright for single-browser tasks.</div>
+          <ul class="tool-uses">
+            <li>Generate PDFs of web pages</li>
+            <li>Capture screenshots for visual regression</li>
+            <li>Automate Chrome-specific workflows</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">PostgreSQL MCP</div>
+          <div class="tool-meta">Official · SQL Database</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Full PostgreSQL access — query, insert, schema inspect. The enterprise-grade relational substrate.</div>
+          <ul class="tool-uses">
+            <li>Run complex analytics queries on live data</li>
+            <li>Inspect schemas and write migrations</li>
+            <li>Debug slow queries with EXPLAIN ANALYZE</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Supabase MCP</div>
+          <div class="tool-meta">2.1K+ stars · Full-stack DB</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">PostgreSQL + Auth + Storage + Realtime in one. The modern full-stack database platform.</div>
+          <ul class="tool-uses">
+            <li>Manage auth users and RLS policies</li>
+            <li>Query and mutate via REST or SQL</li>
+            <li>Manage storage buckets and file uploads</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Slack MCP</div>
+          <div class="tool-meta">Official · Team Messaging</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Send messages, read channels, manage threads. Claude as a Slack team member.</div>
+          <ul class="tool-uses">
+            <li>Post automated deployment notifications</li>
+            <li>Search message history for context</li>
+            <li>Create channels and manage members</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Notion MCP</div>
+          <div class="tool-meta">Official · Documentation</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Read and write Notion databases, pages, and blocks. Turn Notion into a live agent workspace.</div>
+          <ul class="tool-uses">
+            <li>Update project wikis from code changes</li>
+            <li>Create pages and populate databases</li>
+            <li>Search knowledge base for relevant context</li>
+            <li>Sync task status from code to Notion</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Sentry MCP</div>
+          <div class="tool-meta">Official · Error Tracking</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Read production errors, traces, and performance issues. Claude can debug live production problems.</div>
+          <ul class="tool-uses">
+            <li>Pull error context before writing a fix</li>
+            <li>Triage error volume across releases</li>
+            <li>Link issues to git commits automatically</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Firecrawl MCP</div>
+          <div class="tool-meta">98.3K+ stars · Web Scraping</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Turn any website into clean LLM-ready markdown. Best-in-class scraper for agent pipelines.</div>
+          <ul class="tool-uses">
+            <li>Scrape competitor sites for analysis</li>
+            <li>Extract structured data from any page</li>
+            <li>Crawl entire sites for training data</li>
+            <li>Monitor page changes over time</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SCENE 2: TIER 2 -->
+    <section class="scene" data-scene="2">
+      <div class="tier-header">
+        <div>
+          <p class="label">Tier 2 · 18 Tools</p>
+          <h2 class="sec-title">Agentic<br>Infrastructure</h2>
+          <p class="lead" style="font-size:14px;max-width:600px;">Agent coordination, orchestration, vector memory, and cloud. Install after Tier 1 is stable.</p>
+        </div>
+        <span class="tier-badge t2">Agentic — Week 2–3</span>
+      </div>
+      <div class="tool-grid">
+
+        <div class="tool-card">
+          <div class="tool-name">Pinecone MCP</div>
+          <div class="tool-meta">Official · Managed Vector Search</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Managed vector database for semantic similarity search at scale. The RAG backbone.</div>
+          <ul class="tool-uses">
+            <li>Store and query document embeddings</li>
+            <li>Semantic search over knowledge bases</li>
+            <li>Power recommendation engines</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Qdrant MCP</div>
+          <div class="tool-meta">Community · Self-hosted Vector DB</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Self-hosted alternative to Pinecone. Full control over your vector data with no cloud dependency.</div>
+          <ul class="tool-uses">
+            <li>On-premise vector search for sensitive data</li>
+            <li>Multi-modal embeddings (text + image)</li>
+            <li>High-performance filtering with payload</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Weaviate MCP</div>
+          <div class="tool-meta">Community · Multi-modal</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Multi-modal vector DB that handles text, images, and structured data in one index.</div>
+          <ul class="tool-uses">
+            <li>Cross-modal search (find images by text)</li>
+            <li>Hybrid keyword + vector search</li>
+            <li>GraphQL-based data access</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Chroma MCP</div>
+          <div class="tool-meta">Community · Local Vector Storage</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Lightweight local vector store. Fastest path from idea to RAG — zero cloud setup required.</div>
+          <ul class="tool-uses">
+            <li>Prototype RAG pipelines locally</li>
+            <li>Embed and query documents in one step</li>
+            <li>Dev-mode alternative to Pinecone</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Zapier MCP</div>
+          <div class="tool-meta">Official · 8,000+ App Integrations</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Trigger any of 8,000+ app automations from Claude. The broadest integration surface in the stack.</div>
+          <ul class="tool-uses">
+            <li>Send emails, create CRM records, post social</li>
+            <li>Trigger webhooks to any external service</li>
+            <li>Chain multi-step workflows from one command</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">n8n MCP</div>
+          <div class="tool-meta">Community · Self-hosted Workflows</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Open-source Zapier alternative you self-host. Full data sovereignty with visual workflow builder.</div>
+          <ul class="tool-uses">
+            <li>Build private automation pipelines</li>
+            <li>Complex conditional workflow logic</li>
+            <li>Integrate internal tools without cloud exposure</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Pipedream MCP</div>
+          <div class="tool-meta">Official · Serverless Automation</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Serverless event-driven workflows with code-level control. JavaScript/Python in each step.</div>
+          <ul class="tool-uses">
+            <li>Event-driven automation with custom code</li>
+            <li>Webhook receiver → transform → forward</li>
+            <li>Scheduled data processing pipelines</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Make MCP</div>
+          <div class="tool-meta">Community · Visual Automation</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Visual no-code automation platform (formerly Integromat). 1,500+ apps with drag-drop builder.</div>
+          <ul class="tool-uses">
+            <li>Complex branching automations visually</li>
+            <li>Data transformation between apps</li>
+            <li>Error handling and retry logic in flows</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">AWS MCP</div>
+          <div class="tool-meta">AWS Labs · Official</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Native AWS service access — S3, Lambda, EC2, DynamoDB, Bedrock and more from Claude.</div>
+          <ul class="tool-uses">
+            <li>Deploy Lambda functions on demand</li>
+            <li>Read/write S3 buckets and objects</li>
+            <li>Query CloudWatch logs for debugging</li>
+            <li>Invoke Bedrock models for comparison</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Docker MCP</div>
+          <div class="tool-meta">Docker Desktop · Official</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Container management from Claude — build, run, inspect, push images and compose stacks.</div>
+          <ul class="tool-uses">
+            <li>Build and test Docker images mid-task</li>
+            <li>Inspect running container logs</li>
+            <li>Manage Docker Compose stacks</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Kubernetes MCP</div>
+          <div class="tool-meta">Community · Cluster Orchestration</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">kubectl-level access to Kubernetes clusters. Deploy, scale, inspect, and debug workloads.</div>
+          <ul class="tool-uses">
+            <li>Check pod status and logs in production</li>
+            <li>Apply manifests and scale deployments</li>
+            <li>Describe failing resources for diagnosis</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Terraform MCP</div>
+          <div class="tool-meta">Community · Infrastructure as Code</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Plan and apply Terraform infrastructure changes from Claude. IaC in the agent loop.</div>
+          <ul class="tool-uses">
+            <li>Preview infrastructure changes before apply</li>
+            <li>Generate HCL from architecture descriptions</li>
+            <li>Audit state for drift detection</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">SQLite MCP</div>
+          <div class="tool-meta">Official · Local Databases</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Query and write SQLite databases locally. Zero-config relational data for agent tasks.</div>
+          <ul class="tool-uses">
+            <li>Store agent session state persistently</li>
+            <li>Analyze CSV data imported as tables</li>
+            <li>Prototype database schemas locally</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">MongoDB MCP</div>
+          <div class="tool-meta">Community · NoSQL Database</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Document store access — find, aggregate, insert, update across MongoDB collections.</div>
+          <ul class="tool-uses">
+            <li>Query document collections with aggregation</li>
+            <li>Inspect schema patterns across documents</li>
+            <li>Migrate data between collections</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Redis MCP</div>
+          <div class="tool-meta">Community · Cache & Pub/Sub</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Fast key-value store, pub/sub messaging, and queue management. Claude-accessible cache layer.</div>
+          <ul class="tool-uses">
+            <li>Inspect cached values in production</li>
+            <li>Publish events to Redis channels</li>
+            <li>Manage rate-limit counters</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Jira MCP</div>
+          <div class="tool-meta">Official Atlassian · Issue Tracking</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Full Jira access — create issues, update status, query sprints, manage backlogs from Claude.</div>
+          <ul class="tool-uses">
+            <li>Auto-create tickets from bug reports</li>
+            <li>Query sprint velocity and open blockers</li>
+            <li>Update issue status from git events</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Linear MCP</div>
+          <div class="tool-meta">Official Linear · Project Management</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Modern issue tracker for engineering teams. Fast, keyboard-first, and deeply integrated.</div>
+          <ul class="tool-uses">
+            <li>Create and assign issues mid-session</li>
+            <li>Track cycle progress and priorities</li>
+            <li>Link PRs to issues automatically</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Asana MCP</div>
+          <div class="tool-meta">Community · Task Management</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Cross-functional project and task management with timeline views and portfolio tracking.</div>
+          <ul class="tool-uses">
+            <li>Create tasks and assign to team members</li>
+            <li>Query project milestone status</li>
+            <li>Build automated project templates</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SCENE 3: TIER 3 -->
+    <section class="scene" data-scene="3">
+      <div class="tier-header">
+        <div>
+          <p class="label">Tier 3 · 24 Tools (Updated)</p>
+          <h2 class="sec-title">Specialized<br>Services</h2>
+          <p class="lead" style="font-size:14px;max-width:600px;">Domain-specific platforms and integrations. Includes new AI media tools added June 2026.</p>
+        </div>
+        <span class="tier-badge t3">Specialized — Deploy as Needed</span>
+      </div>
+      <div class="tool-grid">
+
+        <div class="tool-card" style="border-color:var(--accent-a);box-shadow:3px 3px 0 var(--accent-a);">
+          <div class="tool-name">Higgsfield AI MCP</div>
+          <div class="tool-meta">NEW June 2026 · Image & Video Generation</div>
+          <span class="chip new">NEW 2026</span>
+          <div class="tool-desc">Professional AI media generation — images, videos, lip-sync, upscaling, background removal, and virality prediction. Full creative production pipeline in one MCP.</div>
+          <ul class="tool-uses">
+            <li>Generate cinematic images and videos from prompts</li>
+            <li>Predict video virality before publishing</li>
+            <li>Lip-sync video to any audio track</li>
+            <li>Remove backgrounds and upscale media</li>
+            <li>3D generation and motion control</li>
+            <li>Personal clipper for highlight reels</li>
+          </ul>
+        </div>
+
+        <div class="tool-card" style="border-color:var(--accent-a);box-shadow:3px 3px 0 var(--accent-a);">
+          <div class="tool-name">HuggingFace MCP</div>
+          <div class="tool-meta">NEW June 2026 · Model Hub & Research</div>
+          <span class="chip new">NEW 2026</span>
+          <div class="tool-desc">Access the entire HuggingFace ecosystem — search 500K+ models, datasets, spaces, papers. Run inference via Inference API. Authenticated as redpillar.</div>
+          <ul class="tool-uses">
+            <li>Search and compare any open-source model</li>
+            <li>Find datasets for fine-tuning or evaluation</li>
+            <li>Search arXiv papers by concept</li>
+            <li>Launch and query Gradio Spaces</li>
+            <li>Query model metadata and benchmarks</li>
+          </ul>
+        </div>
+
+        <div class="tool-card" style="border-color:var(--accent-a);box-shadow:3px 3px 0 var(--accent-a);">
+          <div class="tool-name">Domain Tools MCP</div>
+          <div class="tool-meta">NEW June 2026 · Domain Intelligence</div>
+          <span class="chip new">NEW 2026</span>
+          <div class="tool-desc">Check domain availability and get AI-powered name suggestions across TLDs. Essential for brand and product launches.</div>
+          <ul class="tool-uses">
+            <li>Check availability for any domain name</li>
+            <li>Get creative domain suggestions by theme</li>
+            <li>Bulk check name variants across TLDs</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Gmail MCP</div>
+          <div class="tool-meta">Official Google · Email</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Full Gmail access — read threads, search, create drafts, label and organize. Claude as email assistant.</div>
+          <ul class="tool-uses">
+            <li>Draft and schedule email campaigns</li>
+            <li>Search threads for context before responding</li>
+            <li>Auto-label and organize inbox by rules</li>
+            <li>Create follow-up drafts from meeting notes</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Google Drive MCP</div>
+          <div class="tool-meta">Official Google · File Storage</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">List, read, copy, search, and manage Google Drive files. Access Docs, Sheets, Slides content.</div>
+          <ul class="tool-uses">
+            <li>Read Docs for context before writing</li>
+            <li>List recent files for quick access</li>
+            <li>Search Drive for specific documents</li>
+            <li>Copy and reorganize file structures</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Google Calendar MCP</div>
+          <div class="tool-meta">Official Google · Scheduling</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Create, read, and manage calendar events. Claude as scheduling assistant across workspaces.</div>
+          <ul class="tool-uses">
+            <li>Schedule meetings from natural language</li>
+            <li>Check availability before booking</li>
+            <li>Create recurring events and reminders</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Shopify MCP</div>
+          <div class="tool-meta">Official Shopify · E-commerce</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Full Shopify store management — products, orders, inventory, customers, analytics.</div>
+          <ul class="tool-uses">
+            <li>Create and update product listings</li>
+            <li>Query order status and fulfillment</li>
+            <li>Analyze sales data and inventory levels</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Stripe MCP</div>
+          <div class="tool-meta">Official Stripe · Payments</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Payment management, subscription billing, customer records, and revenue analytics from Claude.</div>
+          <ul class="tool-uses">
+            <li>Query customer subscription status</li>
+            <li>Debug failed payment events</li>
+            <li>Retrieve invoice and charge history</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">HubSpot MCP</div>
+          <div class="tool-meta">Official HubSpot · CRM</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">CRM operations — contacts, deals, companies, tasks, pipelines, and marketing automation.</div>
+          <ul class="tool-uses">
+            <li>Log calls and create deal stages</li>
+            <li>Search contacts by any property</li>
+            <li>Pull pipeline data for forecasting</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Salesforce MCP</div>
+          <div class="tool-meta">Community · Enterprise CRM</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">SOQL queries, Apex triggers, object management across the Salesforce platform.</div>
+          <ul class="tool-uses">
+            <li>Run custom SOQL reports on demand</li>
+            <li>Update opportunity stages and fields</li>
+            <li>Extract CRM data for analysis</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Apify MCP</div>
+          <div class="tool-meta">Official Apify · 3,000+ Scrapers</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Run any of 3,000+ pre-built web scrapers as MCP tools. Social, e-commerce, maps, news, more.</div>
+          <ul class="tool-uses">
+            <li>Scrape Instagram, TikTok, LinkedIn profiles</li>
+            <li>Extract Google Maps business data</li>
+            <li>Monitor competitor product listings</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">HuggingFace (Model Registry)</div>
+          <div class="tool-meta">Community · Open-source Models</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Direct HuggingFace Hub API access for model discovery, dataset search, and inference.</div>
+          <ul class="tool-uses">
+            <li>Find best model for specific task/benchmark</li>
+            <li>Pull model cards and architecture details</li>
+            <li>Trigger Inference API calls</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Open Router MCP</div>
+          <div class="tool-meta">Community · LLM Routing</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Route prompts to 200+ LLMs via single API. Compare models and optimize cost/quality tradeoffs.</div>
+          <ul class="tool-uses">
+            <li>A/B test prompts across models</li>
+            <li>Fallback routing when primary model is slow</li>
+            <li>Cost optimization across provider tiers</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Snowflake MCP</div>
+          <div class="tool-meta">Community · Data Warehouse</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Run SQL against Snowflake data warehouse. Enterprise analytics at cloud scale.</div>
+          <ul class="tool-uses">
+            <li>Ad-hoc analytics on petabyte datasets</li>
+            <li>Build and run DBT models</li>
+            <li>Cross-database joins and transforms</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Databricks MCP</div>
+          <div class="tool-meta">Community · Data Analytics</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Unified analytics platform — Spark SQL, MLflow, Delta Lake, notebooks from Claude.</div>
+          <ul class="tool-uses">
+            <li>Run Spark jobs and monitor progress</li>
+            <li>Track ML experiments with MLflow</li>
+            <li>Query Delta Lake tables at scale</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">WooCommerce MCP</div>
+          <div class="tool-meta">Community · WordPress Commerce</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">WordPress e-commerce management — products, orders, coupons, customers via REST API.</div>
+          <ul class="tool-uses">
+            <li>Bulk update product prices and stock</li>
+            <li>Query orders by status or date range</li>
+            <li>Manage coupon codes and discounts</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Obsidian MCP</div>
+          <div class="tool-meta">Community · Knowledge Management</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Read and write Obsidian vaults. Claude as a personal knowledge management assistant.</div>
+          <ul class="tool-uses">
+            <li>Search notes by content or tag</li>
+            <li>Create linked notes automatically</li>
+            <li>Extract daily note content for briefings</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Tableau MCP</div>
+          <div class="tool-meta">Community · Business Intelligence</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Tableau Server/Cloud integration — workbook management, data source refresh, view embedding.</div>
+          <ul class="tool-uses">
+            <li>Trigger data source refreshes on demand</li>
+            <li>Query published view data via REST</li>
+            <li>Manage workbook and user permissions</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SCENE 4: TIER 4 -->
+    <section class="scene" data-scene="4">
+      <div class="tier-header">
+        <div>
+          <p class="label">Tier 4 · 18 Tools</p>
+          <h2 class="sec-title">Advanced<br>Integration</h2>
+          <p class="lead" style="font-size:14px;max-width:600px;">Orchestration, DevOps, observability, security, and sovereignty. The meta layer above everything.</p>
+        </div>
+        <span class="tier-badge t4">Advanced — Sovereignty Layer</span>
+      </div>
+      <div class="tool-grid">
+
+        <div class="tool-card">
+          <div class="tool-name">GitLab MCP</div>
+          <div class="tool-meta">Community · Code & CI/CD</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Self-hosted or cloud GitLab — MRs, pipelines, registries, wikis. Enterprise git sovereignty.</div>
+          <ul class="tool-uses">
+            <li>Trigger CI/CD pipelines from Claude</li>
+            <li>Review merge requests inline</li>
+            <li>Manage GitLab Container Registry</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">CircleCI MCP</div>
+          <div class="tool-meta">Community · Continuous Integration</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Trigger, monitor, and debug CircleCI pipelines. Rerun failed jobs from Claude without browser.</div>
+          <ul class="tool-uses">
+            <li>Rerun failed pipeline steps</li>
+            <li>Read job logs for failure diagnosis</li>
+            <li>Monitor build queue and concurrency</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">ArgoCD MCP</div>
+          <div class="tool-meta">Community · GitOps Deployments</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">GitOps continuous delivery — sync apps, check health, manage rollbacks in Kubernetes.</div>
+          <ul class="tool-uses">
+            <li>Check sync status of all applications</li>
+            <li>Trigger manual sync for out-of-sync apps</li>
+            <li>Rollback to previous deployed revision</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Datadog MCP</div>
+          <div class="tool-meta">Community · Full-stack Monitoring</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Metrics, traces, logs, dashboards, monitors. Claude-assisted incident investigation at production scale.</div>
+          <ul class="tool-uses">
+            <li>Query metrics and create monitors</li>
+            <li>Search distributed traces for latency</li>
+            <li>Correlate logs across services</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Grafana MCP</div>
+          <div class="tool-meta">Community · Metrics Visualization</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Query Grafana datasources, read dashboards, create annotations. Open-source observability.</div>
+          <ul class="tool-uses">
+            <li>Run PromQL queries from Claude</li>
+            <li>Add deployment annotations to dashboards</li>
+            <li>Alert on threshold breaches</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">New Relic MCP</div>
+          <div class="tool-meta">Community · APM & Observability</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">NRQL-powered APM, error rates, transaction traces, and real user monitoring.</div>
+          <ul class="tool-uses">
+            <li>Find slow transactions by endpoint</li>
+            <li>Correlate deployments with error spikes</li>
+            <li>Build custom NRQL dashboards</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Kafka MCP</div>
+          <div class="tool-meta">Community · Event Streaming</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Produce and consume Kafka topics, manage consumer groups, inspect offset lag.</div>
+          <ul class="tool-uses">
+            <li>Publish events to topics from Claude</li>
+            <li>Monitor consumer group lag</li>
+            <li>Replay historical events for debugging</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">RabbitMQ MCP</div>
+          <div class="tool-meta">Community · Message Broker</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Publish, consume, and manage RabbitMQ queues, exchanges, and bindings.</div>
+          <ul class="tool-uses">
+            <li>Inspect queue depth and message count</li>
+            <li>Publish test messages for debugging</li>
+            <li>Manage dead-letter queue contents</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Kong MCP</div>
+          <div class="tool-meta">Community · API Gateway</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Manage Kong API gateway — routes, services, plugins, rate limiting, auth policies.</div>
+          <ul class="tool-uses">
+            <li>Add rate limiting to any route</li>
+            <li>Deploy new service routes without kubectl</li>
+            <li>Inspect active plugin configurations</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Postman MCP</div>
+          <div class="tool-meta">Community · API Development</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Run Postman collections, manage environments, inspect API schemas and mock servers.</div>
+          <ul class="tool-uses">
+            <li>Execute collection runs for API testing</li>
+            <li>Manage environment variables per context</li>
+            <li>Generate docs from collection schema</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Auth0 MCP</div>
+          <div class="tool-meta">Community · Authentication</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">User management, application config, rules, and MFA settings across Auth0 tenants.</div>
+          <ul class="tool-uses">
+            <li>Look up user accounts by email</li>
+            <li>Block/unblock users without dashboard</li>
+            <li>Manage application client configurations</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Okta MCP</div>
+          <div class="tool-meta">Community · Identity Management</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Enterprise identity — user provisioning, group management, app assignments, policy enforcement.</div>
+          <ul class="tool-uses">
+            <li>Provision or deprovision users instantly</li>
+            <li>Assign apps to groups from Claude</li>
+            <li>Audit login events and failed attempts</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">1Password MCP</div>
+          <div class="tool-meta">Community · Secrets Management</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Read secrets from 1Password vaults. Inject credentials into agent workflows safely.</div>
+          <ul class="tool-uses">
+            <li>Fetch API keys for use in pipelines</li>
+            <li>Rotate secrets on schedule</li>
+            <li>Audit vault access and item changes</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Azure MCP</div>
+          <div class="tool-meta">Microsoft · Azure Services</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Azure resource management — compute, storage, functions, AI services, and DevOps pipelines.</div>
+          <ul class="tool-uses">
+            <li>Deploy Azure Functions from Claude</li>
+            <li>Manage blob storage containers</li>
+            <li>Invoke Azure OpenAI endpoints</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">GCP MCP</div>
+          <div class="tool-meta">Google Cloud · GCP Services</div>
+          <span class="chip official">Official</span>
+          <div class="tool-desc">Google Cloud Platform — BigQuery, Cloud Run, GCS, Vertex AI, Pub/Sub from Claude.</div>
+          <ul class="tool-uses">
+            <li>Run BigQuery SQL jobs on demand</li>
+            <li>Deploy Cloud Run services</li>
+            <li>Call Vertex AI models for inference</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">Pulsar MCP</div>
+          <div class="tool-meta">Community · Distributed Messaging</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Apache Pulsar topics, subscriptions, tenants, and namespaces for cloud-native messaging.</div>
+          <ul class="tool-uses">
+            <li>Publish messages to Pulsar topics</li>
+            <li>Manage tenant and namespace configs</li>
+            <li>Monitor subscription backlog</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">McPorter MCP</div>
+          <div class="tool-meta">Community · Multi-server Management</div>
+          <span class="chip community">Community</span>
+          <div class="tool-desc">Meta-orchestration across multiple MCP servers. Manage the stack from a single interface.</div>
+          <ul class="tool-uses">
+            <li>Health-check all MCP servers at once</li>
+            <li>Route requests to correct server dynamically</li>
+            <li>Manage server configs and restarts</li>
+          </ul>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-name">OPEN KLAW Protocol</div>
+          <div class="tool-meta">Tier 4 · Sovereignty Layer</div>
+          <span class="chip new">Sovereignty</span>
+          <div class="tool-desc">The meta-orchestration protocol binding all 4 tiers into a unified agent operating system. Chapter replication model for scaling KLAWS nodes.</div>
+          <ul class="tool-uses">
+            <li>Coordinate agents across all tiers</li>
+            <li>Enforce policy and access rules globally</li>
+            <li>Chapter node replication and licensing</li>
+            <li>Sovereignty audit trail across operations</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SCENE 5: YOUR STACK -->
+    <section class="scene" data-scene="5">
+      <p class="label">Your Custom Tools Mapped</p>
+      <h2 class="sec-title">Where Your<br><span style="color:var(--accent-d)">Tools Fit</span></h2>
+      <p style="font-size:13px;font-weight:600;max-width:700px;margin-bottom:16px;line-height:1.5;">Your existing tools are already powerful — here's where they slot into the 4-tier architecture and what each unlocks for you.</p>
+      <table class="mapping-table">
+        <thead>
+          <tr><th>Your Tool</th><th>Tier</th><th>Category</th><th>What It Unlocks</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>GitHub ✓</td><td><span class="t-badge t1">Tier 1</span></td><td>Substrate — Files & Code</td><td>Repository ops, PR creation, CI trigger, file reads. Already substrate-level.</td></tr>
+          <tr><td>Claude Suite</td><td><span class="t-badge t3">Tier 3</span></td><td>LLM Access Layer</td><td>Core reasoning engine across all tiers. The brain that runs the stack.</td></tr>
+          <tr><td>NotebookLM</td><td><span class="t-badge t3">Tier 3</span></td><td>AI Research Platform</td><td>Deep document analysis and source grounding. Pair with Exa + Tavily.</td></tr>
+          <tr><td>HuggingFace ✓</td><td><span class="t-badge t3">Tier 3</span></td><td>Model Registry</td><td>500K+ model access, inference API, paper search. Now wired as MCP.</td></tr>
+          <tr><td>Higgsfield AI ✓</td><td><span class="t-badge t3">Tier 3</span></td><td>AI Media Generation</td><td>Image, video, lip-sync, virality score. Full creative pipeline as MCP tools.</td></tr>
+          <tr><td>Hermes Agent</td><td><span class="t-badge t3">Tier 3</span></td><td>Custom Agent</td><td>Specialized reasoning agent. Deploy against Tier 1–2 substrate for power.</td></tr>
+          <tr><td>Space Agent</td><td><span class="t-badge t3">Tier 3</span></td><td>Custom Agent</td><td>Domain-specific agent. Route via McPorter for multi-agent orchestration.</td></tr>
+          <tr><td>Kimi 2.6 / Kimi Claw</td><td><span class="t-badge t3">Tier 3</span></td><td>Custom Agent</td><td>Alternative reasoning model. Use via Open Router for cost/quality routing.</td></tr>
+          <tr><td>100 Agent Swarm</td><td><span class="t-badge t3">Tier 3</span></td><td>Custom Agent</td><td>Parallel agent execution. Needs Tier 2 (Redis + queues) for coordination.</td></tr>
+          <tr><td>Manus Claw</td><td><span class="t-badge t3">Tier 3</span></td><td>Custom Agent</td><td>Web-based agent. Pair with Playwright MCP for browser-native tasks.</td></tr>
+          <tr><td>GenSpark Claw</td><td><span class="t-badge t3">Tier 3</span></td><td>Custom Platform</td><td>Research + synthesis platform. Upgrade with Exa + Firecrawl substrate.</td></tr>
+          <tr><td>Obsidian</td><td><span class="t-badge t3">Tier 3</span></td><td>Knowledge Management</td><td>Personal PKM. Connect via Obsidian MCP for Claude-native vault access.</td></tr>
+          <tr><td>Atlas Cloud</td><td><span class="t-badge t4">Tier 4</span></td><td>Cloud Integration</td><td>Enterprise cloud layer. Integrates with AWS/GCP/Azure MCP for full control.</td></tr>
+          <tr><td>Open Router</td><td><span class="t-badge t3">Tier 3</span></td><td>LLM Routing</td><td>200+ model routing. Your cost-optimization layer over all LLM spend.</td></tr>
+          <tr><td>Imagen 2</td><td><span class="t-badge t3">Tier 3</span></td><td>Image Generation</td><td>Google's image gen. Now complemented by Higgsfield for video pipeline.</td></tr>
+          <tr><td>MYTHOS / Anti Gravity</td><td><span class="t-badge t3">Tier 3</span></td><td>Custom Platform</td><td>Proprietary platforms. Need Tier 1 substrate + Tier 2 queues beneath them.</td></tr>
+          <tr><td>OPEN KLAW</td><td><span class="t-badge t4">Tier 4</span></td><td>Meta-Orchestration</td><td>Sovereignty protocol. The binding layer across your entire tool architecture.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SCENE 6: 5 PILLARS -->
+    <section class="scene" data-scene="6">
+      <p class="label">KLAWS Framework</p>
+      <h2 class="sec-title">5 Pillars<br><span style="color:var(--accent-d)">Mapped to Tiers</span></h2>
+      <div class="pillar-grid" style="margin-top:14px;">
+        <div class="pillar-card">
+          <div class="pillar-letter">K</div>
+          <div class="pillar-name">Kinetic<br>Knowledge</div>
+          <div class="pillar-tools">
+            <strong>Tier 1</strong><br>Memory MCP<br>Sequential Thinking<br>Context7<br><br>
+            <strong>Tier 2</strong><br>Pinecone · Qdrant<br>Weaviate · Chroma<br><br>
+            <strong>New 2026</strong><br>HuggingFace MCP<br>HF Paper Search<br>arXiv Integration
+          </div>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-letter">L</div>
+          <div class="pillar-name">Land &<br>Legacy</div>
+          <div class="pillar-tools">
+            <strong>Tier 1</strong><br>Filesystem<br>GitHub · Git · Fetch<br><br>
+            <strong>Tier 2</strong><br>AWS · Docker<br>Kubernetes<br>Terraform<br><br>
+            <strong>Tier 4</strong><br>GitLab · ArgoCD<br>Atlas Cloud
+          </div>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-letter">A</div>
+          <div class="pillar-name">AGI /<br>Autonomy</div>
+          <div class="pillar-tools">
+            <strong>Tier 1</strong><br>Brave · Tavily · Exa<br>Playwright · Puppeteer<br><br>
+            <strong>Tier 2</strong><br>Zapier · n8n<br>Pipedream · Make<br><br>
+            <strong>New 2026</strong><br>Higgsfield AI<br>100 Agent Swarm<br>GenSpark Claw
+          </div>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-letter">W</div>
+          <div class="pillar-name">Wealth &<br>Wisdom</div>
+          <div class="pillar-tools">
+            <strong>Tier 3</strong><br>Shopify · Stripe<br>HubSpot · Salesforce<br><br>
+            <strong>Tier 3</strong><br>Snowflake<br>Databricks · Tableau<br><br>
+            <strong>Tier 3</strong><br>Open Router<br>Domain Tools MCP<br>Gmail · Drive
+          </div>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-letter">S</div>
+          <div class="pillar-name">Sovereignty &<br>Spirituality</div>
+          <div class="pillar-tools">
+            <strong>Tier 4</strong><br>Auth0 · Okta<br>1Password<br><br>
+            <strong>Tier 4</strong><br>McPorter<br>OPEN KLAW Protocol<br><br>
+            <strong>Tier 4</strong><br>Datadog · Grafana<br>Kong · Postman<br>Kafka · Pulsar
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 7: REVENUE + BOOTCAMP -->
+    <section class="scene" data-scene="7">
+      <div class="two-col">
+        <div>
+          <p class="label">Revenue Architecture</p>
+          <h2 class="sec-title">Revenue<br>Per Tier</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+            <div class="rev-card">
+              <div class="rev-title">Tier 1<br>Substrate</div>
+              <ul class="rev-list">
+                <li>Foundation licensing</li>
+                <li>MCP ecosystem setup</li>
+                <li>Universal compatibility</li>
+                <li>Onboarding consulting</li>
+              </ul>
+            </div>
+            <div class="rev-card">
+              <div class="rev-title">Tier 2<br>Agentic</div>
+              <ul class="rev-list">
+                <li>Agent orchestration SaaS</li>
+                <li>Vector DB consulting</li>
+                <li>Cloud infra setup</li>
+                <li>RAG pipeline builds</li>
+              </ul>
+            </div>
+            <div class="rev-card">
+              <div class="rev-title">Tier 3<br>Platforms</div>
+              <ul class="rev-list">
+                <li>Custom agent deployment</li>
+                <li>AI media pipeline</li>
+                <li>Platform integrations</li>
+                <li>Proprietary licensing</li>
+              </ul>
+            </div>
+            <div class="rev-card">
+              <div class="rev-title">Tier 4<br>Sovereignty</div>
+              <ul class="rev-list">
+                <li>OPEN KLAW licensing</li>
+                <li>Sovereignty consulting</li>
+                <li>Chapter replication</li>
+                <li>72 TOKENS activation</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="label">72-Hour Bootcamp Learning Path</p>
+          <h2 class="sec-title">Boot<br>Camp</h2>
+          <div class="phase-row" style="margin-top:14px;">
+            <div class="phase p1">
+              <strong>Day 1 AM · Foundation</strong>
+              Files & Code: Filesystem, GitHub, Git, Fetch
+            </div>
+            <div class="phase p1">
+              <strong>Day 1 PM · Memory & Search</strong>
+              Memory MCP, Sequential Thinking, Brave, Tavily, Exa
+            </div>
+            <div class="phase p1">
+              <strong>Day 1 EVE · Data & Monitoring</strong>
+              PostgreSQL, Supabase, Sentry, Firecrawl, Notion
+            </div>
+            <div class="phase p2">
+              <strong>Day 2 AM · Vector Intelligence</strong>
+              Pinecone, Qdrant, Weaviate, Chroma + HuggingFace MCP
+            </div>
+            <div class="phase p2">
+              <strong>Day 2 PM · Automation</strong>
+              Zapier, n8n, Pipedream, Make
+            </div>
+            <div class="phase p2">
+              <strong>Day 2 EVE · Cloud Infrastructure</strong>
+              AWS, Docker, Kubernetes, Terraform
+            </div>
+            <div class="phase p3">
+              <strong>Day 3 AM · AI Media Pipeline</strong>
+              Higgsfield AI, Domain Tools, Gmail, Drive, Open Router
+            </div>
+            <div class="phase p4">
+              <strong>Day 3 PM · Sovereignty</strong>
+              Auth0, Okta, 1Password, Kong, McPorter
+            </div>
+            <div class="phase p4">
+              <strong>Day 3 EVE · OPEN KLAW Activation</strong>
+              Protocol binding, 72 TOKENS, Chapter launch
+            </div>
+          </div>
+          <div style="margin-top:16px;border:3px solid var(--ink);padding:12px;box-shadow:5px 5px 0 var(--ink);">
+            <div style="font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;">The Absolute</div>
+            <div style="font-size:14px;font-weight:900;line-height:1.5;">
+              THE SUBSTRATE IS UNIVERSAL.<br>
+              THE AGENTS ARE POWERFUL.<br>
+              THE PLATFORMS ARE CUSTOM.<br>
+              THE SOVEREIGNTY IS ABSOLUTE.
+            </div>
+            <div style="margin-top:8px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-d);">80+ TOOLS · 4 TIERS · 5 PILLARS · 1 ARCHITECTURE</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /viewport -->
+
+  <div class="footer">
+    <div class="dots" id="dots"></div>
+    <div class="meta" id="meta">Scene 01 · 08</div>
+  </div>
+</div><!-- /app -->
+
+<script>
+(function(){
+  var palettes = [
+    {a:"#f28cc2",b:"#f1cb3c",c:"#188f5a",d:"#ff7f2a",e:"#3a7bd5"},
+    {a:"#b8a2ff",b:"#ffd166",c:"#3aaed8",d:"#ff7b54",e:"#22a06b"},
+    {a:"#ff7eb6",b:"#d9ef8b",c:"#e84393",d:"#ff9966",e:"#5f9ea0"}
+  ];
+  var sceneIndex = 0;
+  var paletteIndex = 0;
+  var scenes = Array.prototype.slice.call(document.querySelectorAll(".scene"));
+  var dotsWrap = document.getElementById("dots");
+  var meta = document.getElementById("meta");
+  var root = document.documentElement;
+  var sceneLabels = ["Cover","T1 Substrate","T2 Agentic","T3 Specialized","T4 Advanced","Your Stack","5 Pillars","Revenue"];
+
+  function renderDots(){
+    dotsWrap.innerHTML = "";
+    scenes.forEach(function(_,i){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "dot-btn" + (i===sceneIndex?" active":"");
+      btn.textContent = String(i+1);
+      btn.title = sceneLabels[i] || ("Scene "+(i+1));
+      btn.addEventListener("click",function(){ sceneIndex=i; render(); });
+      dotsWrap.appendChild(btn);
+    });
+  }
+
+  function render(){
+    scenes.forEach(function(s,i){ s.classList.toggle("active",i===sceneIndex); });
+    meta.textContent = (sceneLabels[sceneIndex]||"Scene "+(sceneIndex+1))+" · Updated June 2026";
+    renderDots();
+  }
+
+  function setPalette(p){
+    root.style.setProperty("--accent-a",p.a);
+    root.style.setProperty("--accent-b",p.b);
+    root.style.setProperty("--accent-c",p.c);
+    root.style.setProperty("--accent-d",p.d);
+    root.style.setProperty("--accent-e",p.e);
+  }
+
+  document.getElementById("prevBtn").addEventListener("click",function(){
+    sceneIndex=(sceneIndex-1+scenes.length)%scenes.length; render();
+  });
+  document.getElementById("nextBtn").addEventListener("click",function(){
+    sceneIndex=(sceneIndex+1)%scenes.length; render();
+  });
+  document.getElementById("themeBtn").addEventListener("click",function(){
+    root.setAttribute("data-theme",root.getAttribute("data-theme")==="paper"?"dark":"paper");
+  });
+  document.getElementById("paletteBtn").addEventListener("click",function(){
+    paletteIndex=(paletteIndex+1)%palettes.length;
+    setPalette(palettes[paletteIndex]);
+  });
+  document.getElementById("printBtn").addEventListener("click",function(){ window.print(); });
+  document.addEventListener("keydown",function(e){
+    if(e.key==="ArrowRight"){ sceneIndex=(sceneIndex+1)%scenes.length; render(); }
+    else if(e.key==="ArrowLeft"){ sceneIndex=(sceneIndex-1+scenes.length)%scenes.length; render(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
