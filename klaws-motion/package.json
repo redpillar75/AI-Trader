@@ -1,0 +1,29 @@
+{
+  "name": "klaws-motion",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "remotion studio src/Root.tsx",
+    "render:title": "remotion render src/Root.tsx KlawsTitle out/klaws-title.mp4",
+    "render:lowerthird": "remotion render src/Root.tsx KlawsLowerThird out/klaws-lower-third.mp4",
+    "render:countdown": "remotion render src/Root.tsx KlawsCountdown out/klaws-countdown.mp4",
+    "render:story": "remotion render src/Root.tsx KlawsTitleStory out/klaws-title-story.mp4",
+    "render:all": "npm run render:title && npm run render:lowerthird && npm run render:countdown && npm run render:story",
+    "still": "remotion still src/Root.tsx KlawsTitle out/klaws-still.png --frame=30"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@remotion/cli": "^4.0.482",
+    "remotion": "^4.0.482"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "typescript": "^6.0.3"
+  }
+}
