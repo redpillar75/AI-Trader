@@ -118,4 +118,4 @@ test_*.py
 /data/*_test_agent/
 *__test*
 *_test.json
-*_backup_*
+*_backup_*node_modules/
