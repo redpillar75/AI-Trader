@@ -1,0 +1,22 @@
+{
+  "name": "ai-trader-remotion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion project for editing video and layering effects (glitch, grain, vignette, Ken Burns, titles)",
+  "scripts": {
+    "start": "remotion studio src/index.ts",
+    "build": "remotion render src/index.ts MainVideo out/main-video.mp4",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.484",
+    "@remotion/media-utils": "4.0.484",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.484"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.1",
+    "typescript": "5.8.3"
+  }
+}
