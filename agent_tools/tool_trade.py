@@ -17,6 +17,7 @@ from tools.price_tools import (get_latest_position, get_open_prices,
                                get_yesterday_date,
                                get_yesterday_open_and_close_price,
                                get_yesterday_profit)
+from tools.voicebox import trade_alert
 
 mcp = FastMCP("TradeTools")
 
@@ -222,6 +223,7 @@ def buy(symbol: str, amount: int) -> Dict[str, Any]:
         # Step 7: Return updated position
         write_config_value("IF_TRADE", True)
         print("IF_TRADE", get_config_value("IF_TRADE"))
+        trade_alert("Bought", symbol, amount)
         return new_position
 
 
@@ -429,6 +431,7 @@ def sell(symbol: str, amount: int) -> Dict[str, Any]:
 
     # Step 7: Return updated position
     write_config_value("IF_TRADE", True)
+    trade_alert("Sold", symbol, amount, this_symbol_price)
     return new_position
 
 
