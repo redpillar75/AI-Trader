@@ -107,7 +107,7 @@ htmlcov/
 dmypy.json
 
 # Documentation
-CLAUDE.md
+# CLAUDE.md is intentionally tracked — it contains project instructions for Claude Code
 plan.md
 *_plan.md
 design.md
