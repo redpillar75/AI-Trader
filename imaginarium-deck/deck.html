@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Intro to Imaginarium — Blueprints for the Planetarium</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="deck-stage.js"></script>
+<style>
+  :root {
+    --bg: #ECECE8;
+    --ink: #0A0A0A;
+    --paper: #F5F4EF;
+    --accent: #E6FF3D;
+    --line: #0A0A0A;
+    --muted: #8A8A85;
+  }
+  html, body { margin: 0; padding: 0; background: #1a1a1a; }
+  body { font-family: "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); }
+  deck-stage { background: #1a1a1a; }
+
+  /* --- shared slide chrome --- */
+  section.slide {
+    background: var(--bg);
+    color: var(--ink);
+    overflow: hidden;
+  }
+  .frame {
+    position: absolute; inset: 40px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    gap: 12px;
+  }
+  .card { background: var(--paper); position: relative; overflow: hidden; }
+  .card.ink   { background: var(--ink);   color: var(--paper); }
+  .card.lemon { background: var(--accent); color: var(--ink); }
+  .card.photo { background: #111; color: #fff; }
+
+  .pagenum {
+    position: absolute; left: 0; bottom: 0;
+    background: var(--paper); color: var(--ink);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 24px; padding: 14px 22px; letter-spacing: 0.04em;
+  }
+  .pagenum.invert { background: var(--ink); color: var(--paper); }
+  .pagenum.lemon  { background: var(--accent); color: var(--ink); }
+
+  .corner-mark {
+    position: absolute; top: 22px; right: 22px;
+    width: 36px; height: 36px;
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px;
+  }
+  .corner-mark span { background: currentColor; }
+  .corner-mark span:nth-child(2) { background: transparent; }
+
+  .copyright {
+    position: absolute; left: 22px; bottom: 22px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 16px; line-height: 1.4; color: var(--ink); opacity: 0.85;
+  }
+
+  .arrow { width: 64px; height: 64px; display: inline-flex; align-items: center; justify-content: center; }
+  .arrow svg { width: 100%; height: 100%; }
+
+  /* --- typography --- */
+  h1, h2, h3, p { margin: 0; }
+  .display { font-weight: 700; font-size: 132px; line-height: 0.92; letter-spacing: -0.02em; text-transform: uppercase; }
+  .title   { font-weight: 700; font-size: 88px;  line-height: 0.95; letter-spacing: -0.015em; text-transform: uppercase; }
+  .subtitle{ font-weight: 700; font-size: 56px;  line-height: 1;    letter-spacing: -0.01em;  text-transform: uppercase; }
+  .body    { font-size: 28px; line-height: 1.35; font-weight: 400; }
+  .label   {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 24px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink); opacity: 0.7;
+  }
+  .stat-num { font-weight: 700; font-size: 156px; line-height: 0.9; letter-spacing: -0.03em; }
+  .stat-num.sm { font-size: 96px; }
+
+  /* ============================================================
+     SLIDE 1 — COVER
+  ============================================================ */
+  .s-cover .panel-photo-l { grid-column: 1 / span 3; grid-row: 1 / span 8; background: #0a0a0a; position: relative; overflow: hidden; }
+  .s-cover .panel-photo-l .ph {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 80% at 30% 30%, #1a1a2e 0%, #0a0a0a 70%),
+      repeating-linear-gradient(135deg, rgba(230,255,61,.04) 0 2px, transparent 2px 8px);
+  }
+  .s-cover .panel-photo-l::after {
+    content: "SUMMER 2026";
+    position: absolute; left: 16px; bottom: 56px;
+    font-family: "JetBrains Mono", monospace; font-size: 13px;
+    color: rgba(255,255,255,.55); letter-spacing: .12em;
+  }
+  .s-cover .panel-mid       { grid-column: 4 / span 5; grid-row: 1 / span 5; background: var(--accent); position: relative; }
+  .s-cover .panel-titletile { grid-column: 4 / span 5; grid-row: 6 / span 3; background: var(--accent); position: relative; }
+  .s-cover .panel-photo-r   { grid-column: 9 / span 4; grid-row: 1 / span 5; background:#111; position: relative; overflow: hidden; }
+  .s-cover .panel-photo-r .ph {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(80% 60% at 60% 40%, #0d0d1a 0%, #0b0b0b 80%),
+      repeating-linear-gradient(45deg, rgba(230,255,61,.05) 0 2px, transparent 2px 8px);
+  }
+  .s-cover .panel-cap       { grid-column: 9 / span 4; grid-row: 6 / span 3; background: var(--paper); position: relative; }
+
+  .s-cover .subtitle-block {
+    position: absolute; left: 40px; right: 40px; top: 40px;
+  }
+  .s-cover .subtitle-block .course-label {
+    font-family: "JetBrains Mono", monospace; font-size: 18px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink); opacity: 0.6;
+    margin-bottom: 18px;
+  }
+  .s-cover .subtitle-block .subtitle-text {
+    font-size: 36px; font-weight: 700; line-height: 1.08;
+    letter-spacing: -0.01em; text-transform: uppercase; color: var(--ink);
+  }
+  .s-cover .qr {
+    position: absolute; bottom: 40px; left: 40px;
+    width: 80px; height: 80px; background: var(--ink);
+    display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr);
+  }
+  .s-cover .qr i { background: var(--ink); }
+  .s-cover .qr i.k { background: var(--accent); }
+  .s-cover .title-block { position: absolute; left: 40px; right: 40px; bottom: 40px; }
+  .s-cover .meta-l {
+    position: absolute; left: 40px; bottom: 40px;
+    font-family: "JetBrains Mono", monospace; font-size: 22px; line-height: 1.4;
+    letter-spacing: .04em;
+  }
+  .s-cover .blockmark {
+    position: absolute; right: 40px; bottom: 40px;
+    width: 56px; height: 56px;
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px;
+  }
+  .s-cover .blockmark span:nth-child(1) { background: var(--ink); }
+  .s-cover .blockmark span:nth-child(2) { background: transparent; }
+  .s-cover .blockmark span:nth-child(3) { background: transparent; }
+  .s-cover .blockmark span:nth-child(4) { background: var(--ink); }
+
+  /* ============================================================
+     SLIDE 2 — CONTENTS
+  ============================================================ */
+  .s-toc .frame   { gap: 18px; }
+  .s-toc .head    { grid-column: 1 / span 12; grid-row: 1 / span 2; padding: 36px 44px; display: flex; align-items: center; justify-content: space-between; }
+  .s-toc .head h1 { font-size: 92px; font-weight: 700; text-transform: uppercase; letter-spacing: -.015em; line-height: .95; }
+  .s-toc .row     { grid-column: span 4; grid-row: span 3; padding: 40px 44px; display: flex; flex-direction: column; justify-content: center; gap: 22px; min-height: 0; }
+  .s-toc .row .num{ font-family: "JetBrains Mono", monospace; font-size: 22px; letter-spacing: .08em; }
+  .s-toc .row h3  { font-size: 36px; font-weight: 700; text-transform: uppercase; letter-spacing: -.01em; line-height: 1.05; }
+  .s-toc .row p   { font-size: 20px; line-height: 1.5; opacity: .82; }
+
+  /* ============================================================
+     SLIDE 3 — BY THE NUMBERS
+  ============================================================ */
+  .s-stats .accent-l    { grid-column: 1 / span 2; grid-row: 1 / span 8; background: var(--accent); position: relative; }
+  .s-stats .accent-l .plus { position: absolute; top: 28px; left: 28px; font-weight: 700; font-size: 48px; }
+  .s-stats .accent-l .lab  { position: absolute; bottom: 24px; left: 28px; font-family: "JetBrains Mono", monospace; font-size: 24px; letter-spacing: .08em; text-transform: uppercase; }
+  .s-stats .copy        { grid-column: 3 / span 4; grid-row: 1 / span 8; padding: 36px 32px; background: var(--paper); position: relative; display: flex; flex-direction: column; }
+  .s-stats .copy h2     { font-size: 76px; font-weight: 700; text-transform: uppercase; letter-spacing: -.015em; line-height: .95; }
+  .s-stats .copy h2 mark{ background: var(--accent); color: var(--ink); padding: 0 6px; }
+  .s-stats .copy p      { font-size: 24px; line-height: 1.45; margin-top: 24px; max-width: 36ch; }
+  .s-stats .stat-a      { grid-column: 7 / span 3; grid-row: 1 / span 2; background: var(--paper); padding: 24px 28px; }
+  .s-stats .stat-b      { grid-column: 10 / span 3; grid-row: 1 / span 2; background: var(--paper); padding: 24px 28px; }
+  .s-stats .stat-c      { grid-column: 7 / span 3; grid-row: 3 / span 2; background: var(--paper); padding: 24px 28px; }
+  .s-stats .stat-big    { grid-column: 7 / span 6; grid-row: 5 / span 4; background: var(--accent); padding: 28px 36px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+  .s-stats .stat-big .v { font-size: 240px; font-weight: 700; line-height: .85; letter-spacing: -.04em; }
+  .s-stats .stat-big .arrow-out { position: absolute; right: 28px; bottom: 28px; }
+
+  /* ============================================================
+     SLIDE 4 — THREE PILLARS
+  ============================================================ */
+  .s-features .head { grid-column: 1 / span 12; grid-row: 1 / span 2; padding: 28px 32px; display: flex; align-items: center; justify-content: space-between; background: var(--paper); }
+  .s-features .head h2 { font-size: 88px; font-weight: 700; text-transform: uppercase; letter-spacing: -.015em; }
+  .s-features .feat { grid-column: span 4; grid-row: span 6; background: var(--paper); padding: 28px; display: flex; flex-direction: column; gap: 18px; position: relative; }
+  .s-features .feat .pic { aspect-ratio: 16 / 10; background:#111; position: relative; overflow: hidden; }
+  .s-features .feat .pic .ph {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(80% 60% at 50% 50%, #1f1f1f 0%, #0a0a0a 80%),
+      repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 2px, transparent 2px 8px);
+  }
+  .s-features .feat .pic .tag { position: absolute; left: 8px; top: 8px; background: var(--accent); color: var(--ink); font-family: "JetBrains Mono", monospace; font-size: 24px; padding: 4px 10px; letter-spacing: .08em; }
+  .s-features .feat h3 { font-size: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: -.005em; }
+  .s-features .feat p  { font-size: 24px; line-height: 1.4; }
+
+  /* ============================================================
+     SLIDE 5 — COURSE MAP (chart)
+  ============================================================ */
+  .s-chart .pane-l { grid-column: 1 / span 5; grid-row: 1 / span 8; background: var(--ink); color: var(--paper); padding: 36px 32px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+  .s-chart .pane-l h2 { font-size: 84px; font-weight: 700; text-transform: uppercase; letter-spacing: -.015em; line-height: .95; }
+  .s-chart .pane-l h2 em { font-style: normal; color: var(--accent); }
+  .s-chart .pane-l p  { font-size: 22px; line-height: 1.45; max-width: 32ch; opacity: .9; }
+  .s-chart .pane-l .yearlabel { font-family: "JetBrains Mono", monospace; font-size: 16px; letter-spacing: .08em; opacity: .7; }
+  .s-chart .pane-r { grid-column: 6 / span 7; grid-row: 1 / span 8; background: var(--paper); padding: 36px 32px; position: relative; display: flex; flex-direction: column; }
+  .s-chart .legend { display: flex; gap: 28px; margin-bottom: 18px; }
+  .s-chart .legend .li { display: flex; align-items: center; gap: 8px; font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+  .s-chart .legend .li i { width: 18px; height: 12px; background: var(--ink); display: inline-block; }
+  .s-chart .legend .li.b i { background: var(--accent); border: 1.5px solid var(--ink); }
+  .s-chart .bars { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; align-items: end; padding: 16px 0 28px 0; border-bottom: 2px solid var(--ink); }
+  .s-chart .bar  { display: flex; flex-direction: column; gap: 4px; align-items: stretch; height: 100%; justify-content: flex-end; }
+  .s-chart .bar .a { background: var(--ink); }
+  .s-chart .bar .b { background: var(--accent); border: 1.5px solid var(--ink); }
+  .s-chart .xaxis{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; padding-top: 8px; }
+  .s-chart .xaxis span { font-family: "JetBrains Mono", monospace; font-size: 14px; text-align: center; letter-spacing: .08em; }
+
+  /* ============================================================
+     SLIDE 6 — SECTION DIVIDER
+  ============================================================ */
+  .s-section { background: var(--ink); color: var(--paper); }
+  .s-section .frame { gap: 12px; }
+  .s-section .pane-num { grid-column: 1 / span 4; grid-row: 1 / span 8; background: var(--accent); color: var(--ink); padding: 36px 32px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+  .s-section .pane-num .n { font-size: 320px; font-weight: 700; line-height: .85; letter-spacing: -.05em; }
+  .s-section .pane-num .lab { font-family: "JetBrains Mono", monospace; font-size: 18px; letter-spacing: .12em; text-transform: uppercase; }
+  .s-section .pane-title { grid-column: 5 / span 8; grid-row: 1 / span 8; background: var(--ink); color: var(--paper); padding: 36px 32px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+  .s-section .pane-title h2 { font-size: 132px; font-weight: 700; text-transform: uppercase; letter-spacing: -.02em; line-height: .9; }
+  .s-section .pane-title h2 mark { background: var(--accent); color: var(--ink); padding: 0 8px; }
+  .s-section .pane-title p { font-size: 24px; line-height: 1.45; max-width: 48ch; opacity: .85; }
+
+  /* ============================================================
+     SLIDE 7 — QUOTE
+  ============================================================ */
+  .s-quote .photo { grid-column: 1 / span 5; grid-row: 1 / span 8; background:#111; position: relative; overflow: hidden; }
+  .s-quote .photo .ph {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(70% 80% at 50% 35%, #1a1a2e 0%, #0a0a0a 80%),
+      repeating-linear-gradient(135deg, rgba(230,255,61,.04) 0 2px, transparent 2px 8px);
+  }
+  .s-quote .photo .tag { position: absolute; left: 16px; bottom: 16px; font-family: "JetBrains Mono", monospace; font-size: 13px; color: rgba(255,255,255,.55); letter-spacing: .12em; }
+  .s-quote .copy  { grid-column: 6 / span 7; grid-row: 1 / span 5; background: var(--paper); padding: 48px 52px; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
+  .s-quote .copy .qmark { font-size: 96px; line-height: .8; font-weight: 700; color: var(--accent); -webkit-text-stroke: 2px var(--ink); }
+  .s-quote .copy blockquote { font-size: 38px; font-weight: 500; line-height: 1.28; letter-spacing: -.01em; margin: 0; }
+  .s-quote .attr  { grid-column: 6 / span 4; grid-row: 6 / span 3; background: var(--accent); padding: 36px 40px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+  .s-quote .attr .who { font-size: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: -.005em; }
+  .s-quote .attr .role { font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+  .s-quote .mark  { grid-column: 10 / span 3; grid-row: 6 / span 3; background: var(--ink); color: var(--paper); padding: 28px 32px; display: flex; align-items: center; justify-content: center; }
+  .s-quote .mark .blockmark { width: 96px; height: 96px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; }
+  .s-quote .mark .blockmark span { background: var(--accent); }
+  .s-quote .mark .blockmark span:nth-child(2) { background: transparent; }
+  .s-quote .mark .blockmark span:nth-child(3) { background: transparent; }
+
+  /* ============================================================
+     SLIDE 8 — NEXT STEPS / WHAT TO DO TODAY
+  ============================================================ */
+  .s-cta .head    { grid-column: 1 / span 8; grid-row: 1 / span 3; background: var(--accent); padding: 36px 32px; display: flex; flex-direction: column; justify-content: space-between; }
+  .s-cta .head h2 { font-size: 124px; font-weight: 700; text-transform: uppercase; letter-spacing: -.02em; line-height: .9; }
+  .s-cta .head .lab { font-family: "JetBrains Mono", monospace; font-size: 16px; letter-spacing: .08em; text-transform: uppercase; }
+  .s-cta .icon-block { grid-column: 9 / span 4; grid-row: 1 / span 3; background: var(--ink); display: flex; align-items: center; justify-content: center; }
+  .s-cta .icon-block .star { font-size: 120px; line-height: 1; font-weight: 700; color: var(--accent); text-align: center; }
+  .s-cta .step    { padding: 28px 32px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; background: var(--paper); }
+  .s-cta .step.a  { grid-column: 1 / span 4; grid-row: 4 / span 5; }
+  .s-cta .step.b  { grid-column: 5 / span 4; grid-row: 4 / span 5; }
+  .s-cta .step.c  { grid-column: 9 / span 4; grid-row: 4 / span 5; background: var(--ink); color: var(--paper); }
+  .s-cta .step .num { font-family: "JetBrains Mono", monospace; font-size: 16px; letter-spacing: .08em; }
+  .s-cta .step h3 { font-size: 44px; font-weight: 700; text-transform: uppercase; letter-spacing: -.01em; line-height: 1; }
+  .s-cta .step p  { font-size: 20px; line-height: 1.45; }
+  .s-cta .step.c .arrow svg path { stroke: var(--accent); }
+
+  /* ============================================================
+     SLIDE 9 — COURSE DEEP DIVE (consult / text-dense)
+  ============================================================ */
+  .s-consult .frame { gap: 16px; }
+  .s-consult .head    { grid-column: 1 / span 12; grid-row: 1 / span 1; padding: 30px 36px; background: var(--ink); color: var(--paper); display: flex; align-items: center; gap: 32px; }
+  .s-consult .head .tag { font-family: "JetBrains Mono", monospace; font-size: 16px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; flex-shrink: 0; border-right: 1px solid rgba(245,244,239,.25); padding-right: 32px; }
+  .s-consult .head h2 { font-weight: 700; font-size: 28px; line-height: 1.25; text-transform: uppercase; letter-spacing: -.005em; }
+  .s-consult .head h2 mark { background: var(--accent); color: var(--ink); padding: 0 6px; }
+  .s-consult .col     { grid-row: 2 / span 7; padding: 40px 40px; background: var(--paper); display: flex; flex-direction: column; gap: 24px; }
+  .s-consult .col.a   { grid-column: 1 / span 4; }
+  .s-consult .col.b   { grid-column: 5 / span 4; background: var(--accent); }
+  .s-consult .col.c   { grid-column: 9 / span 4; }
+  .s-consult .col h3  { font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: 0; flex-shrink: 0; }
+  .s-consult .col-body { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; }
+  .s-consult .col .meta { font-size: 32px; font-weight: 700; line-height: 1.1; letter-spacing: -.005em; }
+  .s-consult .col p   { font-size: 18px; line-height: 1.45; }
+  .s-consult .col ul  { margin: 0; padding-left: 22px; font-size: 18px; line-height: 1.55; display: flex; flex-direction: column; gap: 14px; }
+  .s-consult .col ul li strong { font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
+  .s-consult .col .src { font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; opacity: .65; padding-top: 16px; border-top: 1px dashed rgba(10,10,10,.25); flex-shrink: 0; }
+
+  /* ============================================================
+     SLIDE 10 — LEARNING ARC (chart2)
+  ============================================================ */
+  .s-chart2 .pane-l { grid-column: 1 / span 5; grid-row: 1 / span 8; background: var(--accent); padding: 32px 28px; display: flex; flex-direction: column; justify-content: space-between; }
+  .s-chart2 .pane-l .label { font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; }
+  .s-chart2 .pane-l h2 { font-weight: 700; font-size: 76px; line-height: .95; text-transform: uppercase; letter-spacing: -.015em; }
+  .s-chart2 .pane-l p { font-size: 20px; line-height: 1.45; max-width: 32ch; }
+  .s-chart2 .pane-l .legend { display: flex; flex-direction: column; gap: 10px; }
+  .s-chart2 .pane-l .legend .li { display: flex; align-items: center; gap: 12px; font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+  .s-chart2 .pane-l .legend .li i { width: 24px; height: 4px; background: var(--ink); }
+  .s-chart2 .pane-r { grid-column: 6 / span 7; grid-row: 1 / span 8; background: var(--paper); padding: 32px 28px 28px 80px; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  .s-chart2 .pane-r .yhead { font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; margin-bottom: 8px; }
+  .s-chart2 .plot { flex: 1; min-height: 0; position: relative; border-left: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+  .s-chart2 .plot .gline { position: absolute; left: 0; right: 0; border-top: 1px dashed rgba(10,10,10,.18); }
+  .s-chart2 .plot .yticks { position: absolute; left: -56px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: space-between; font-family: "JetBrains Mono", monospace; font-size: 14px; }
+  .s-chart2 .plot svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+  .s-chart2 .pane-r .xticks { display: flex; justify-content: space-between; padding-top: 10px; font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .08em; }
+
+  /* ============================================================
+     SLIDE 11 — PROJECT PROCESS
+  ============================================================ */
+  .s-process2 .head { grid-column: 1 / span 12; grid-row: 1 / span 2; padding: 36px 40px; display: flex; align-items: flex-start; justify-content: space-between; gap: 48px; background: var(--paper); }
+  .s-process2 .head h2 { font-weight: 700; font-size: 56px; line-height: 1; text-transform: uppercase; letter-spacing: -.015em; }
+  .s-process2 .head .sub { font-family: "JetBrains Mono", monospace; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; max-width: 46ch; line-height: 1.55; opacity: .75; flex-shrink: 0; }
+  .s-process2 .node { padding: 32px 26px; background: var(--paper); display: flex; flex-direction: column; justify-content: center; gap: 18px; position: relative; }
+  .s-process2 .node.n1 { grid-column: 1 / span 2; grid-row: 3 / span 5; }
+  .s-process2 .node.n2 { grid-column: 3 / span 2; grid-row: 3 / span 5; background: var(--accent); }
+  .s-process2 .node.n3 { grid-column: 5 / span 2; grid-row: 3 / span 5; }
+  .s-process2 .node.n4 { grid-column: 7 / span 2; grid-row: 3 / span 5; background: var(--accent); }
+  .s-process2 .node.n5 { grid-column: 9 / span 2; grid-row: 3 / span 5; }
+  .s-process2 .node.out{ grid-column: 11 / span 2; grid-row: 3 / span 5; background: var(--ink); color: var(--paper); }
+  .s-process2 .node .n { font-family: "JetBrains Mono", monospace; font-size: 15px; letter-spacing: .12em; }
+  .s-process2 .node h3 { font-weight: 700; font-size: 26px; line-height: 1; text-transform: uppercase; letter-spacing: -.005em; }
+  .s-process2 .node p  { font-size: 17px; line-height: 1.4; }
+  .s-process2 .node .arr { position: absolute; right: -10px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; z-index: 2; color: var(--ink); pointer-events: none; }
+  .s-process2 .node.out .arr { display: none; }
+  .s-process2 .timeline { grid-column: 1 / span 12; grid-row: 8 / span 1; background: var(--paper); padding: 16px 28px; display: grid; grid-template-columns: repeat(6, 1fr); align-items: center; font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; }
+  .s-process2 .timeline span { border-right: 1px dashed rgba(10,10,10,.25); padding-right: 12px; }
+  .s-process2 .timeline span:last-child { border-right: 0; }
+
+  /* ============================================================
+     SLIDE 12 — SKILLS MATRIX
+  ============================================================ */
+  .s-matrix2 .head { grid-column: 1 / span 12; grid-row: 1 / span 2; padding: 26px 32px; background: var(--paper); display: flex; align-items: flex-start; justify-content: space-between; gap: 40px; }
+  .s-matrix2 .head h2 { font-weight: 700; font-size: 76px; line-height: .95; text-transform: uppercase; letter-spacing: -.015em; }
+  .s-matrix2 .head .sub { font-family: "JetBrains Mono", monospace; font-size: 16px; letter-spacing: .08em; text-transform: uppercase; max-width: 46ch; line-height: 1.5; opacity: .75; flex-shrink: 0; }
+  .s-matrix2 .table { grid-column: 1 / span 12; grid-row: 3 / span 5; background: var(--paper); display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; grid-auto-rows: 1fr; }
+  .s-matrix2 .table .cell { padding: 18px 22px; border-bottom: 1.5px solid var(--ink); border-right: 1.5px solid var(--ink); display: flex; align-items: center; font-size: 24px; line-height: 1.35; }
+  .s-matrix2 .table .cell:nth-child(4n) { border-right: 0; }
+  .s-matrix2 .table .last { border-bottom: 0; }
+  .s-matrix2 .table .head-row { background: var(--ink); color: var(--paper); font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; }
+  .s-matrix2 .table .row-label { font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: -.005em; }
+  .s-matrix2 .pill { display: inline-block; padding: 6px 14px; font-family: "JetBrains Mono", monospace; font-size: 16px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; line-height: 1.3; }
+  .s-matrix2 .pill.yes  { background: var(--accent); color: var(--ink); }
+  .s-matrix2 .pill.part { background: var(--paper); color: var(--ink); border: 1.5px solid var(--ink); }
+  .s-matrix2 .pill.no   { background: var(--ink); color: var(--paper); }
+  .s-matrix2 .pill.note { background: transparent; color: var(--ink); opacity: .7; padding-left: 0; }
+</style>
+</head>
+<body>
+
+<deck-stage width="1920" height="1080">
+
+  <!-- ============================================================
+       01. COVER
+  ============================================================ -->
+  <section class="slide s-cover" data-label="01 Cover">
+    <div class="frame">
+      <div class="panel-photo-l">
+        <div class="ph"></div>
+      </div>
+      <div class="panel-mid">
+        <div class="subtitle-block">
+          <div class="course-label">Classroom Kickoff · Summer 2026</div>
+          <div class="subtitle-text">Blueprints for<br />the Planetarium</div>
+        </div>
+        <div class="qr" aria-hidden="true">
+          <i></i><i class="k"></i><i></i><i class="k"></i><i></i>
+          <i class="k"></i><i></i><i class="k"></i><i></i><i class="k"></i>
+          <i></i><i class="k"></i><i></i><i class="k"></i><i></i>
+          <i class="k"></i><i></i><i class="k"></i><i></i><i class="k"></i>
+          <i></i><i class="k"></i><i></i><i class="k"></i><i></i>
+        </div>
+      </div>
+      <div class="panel-titletile">
+        <div class="title-block">
+          <h1 class="title">Intro to<br />Imaginarium</h1>
+        </div>
+        <div class="blockmark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="panel-photo-r">
+        <div class="ph"></div>
+      </div>
+      <div class="panel-cap">
+        <div class="meta-l">
+          Red Pillar<br />Summer 2026
+        </div>
+      </div>
+    </div>
+    <div class="pagenum">01 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       02. CONTENTS
+  ============================================================ -->
+  <section class="slide s-toc" data-label="02 Contents">
+    <div class="frame">
+      <div class="head card">
+        <h1>Contents</h1>
+        <div class="corner-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="row card">
+        <div class="num">01 / Orientation</div>
+        <div>
+          <h3>What is Imaginarium?</h3>
+          <p>The course premise, the planetarium metaphor, and why blueprints matter.</p>
+        </div>
+      </div>
+      <div class="row card lemon">
+        <div class="num">02 / By the Numbers</div>
+        <div>
+          <h3>The semester at a glance</h3>
+          <p>Weeks, projects, deliverables — the shape of the course in hard numbers.</p>
+        </div>
+      </div>
+      <div class="row card">
+        <div class="num">03 / Pillars</div>
+        <div>
+          <h3>Three ways of knowing</h3>
+          <p>Imagine, Blueprint, Build — the three modes that structure all our work.</p>
+        </div>
+      </div>
+      <div class="row card">
+        <div class="num">04 / Course Map</div>
+        <div>
+          <h3>The arc of the semester</h3>
+          <p>How complexity and confidence build across four phases.</p>
+        </div>
+      </div>
+      <div class="row card ink">
+        <div class="num" style="opacity:.75">05 / Craft</div>
+        <div>
+          <h3>How each project works</h3>
+          <p style="opacity:.85">The five-stage process every project follows from spark to finish.</p>
+        </div>
+      </div>
+      <div class="row card lemon">
+        <div class="num">06 / Skills</div>
+        <div>
+          <h3>What you'll build</h3>
+          <p>A skills matrix across the three pillars and four project types.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pagenum">02 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       03. BY THE NUMBERS
+  ============================================================ -->
+  <section class="slide s-stats" data-label="03 The Semester at a Glance">
+    <div class="frame">
+      <div class="accent-l">
+        <div class="plus">3</div>
+        <div class="lab">Projects</div>
+        <div class="corner-mark" style="top:auto; bottom:22px; right:22px; color:var(--ink)" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="copy">
+        <h2>The semester<br />in <mark>numbers</mark></h2>
+        <p>Imaginarium runs 12 weeks, across three project arcs. Each arc moves from concept to artifact — from a wild idea to something you can hold, show, and defend. We work in the open: crits are public, failures are documented, and every blueprint is signed.</p>
+        <div style="margin-top:auto" class="label">Summer 2026 · Red Pillar</div>
+      </div>
+      <div class="stat-a">
+        <div class="stat-num sm">12</div>
+        <div class="label" style="margin-top:8px">Weeks of work</div>
+      </div>
+      <div class="stat-b">
+        <div class="stat-num sm">6</div>
+        <div class="label" style="margin-top:8px">Public crits</div>
+      </div>
+      <div class="stat-c">
+        <div class="stat-num sm">1</div>
+        <div class="label" style="margin-top:8px">Final showcase</div>
+      </div>
+      <div class="stat-big">
+        <div class="label">Ideas you'll bring to life</div>
+        <div class="v">∞</div>
+        <div class="arrow-out arrow" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4"><path d="M8 32 H56 M40 16 L56 32 L40 48"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="pagenum lemon">03 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       04. THREE PILLARS
+  ============================================================ -->
+  <section class="slide s-features" data-label="04 Three Pillars">
+    <div class="frame">
+      <div class="head">
+        <h2>Three pillars</h2>
+        <div class="label">Every project lives inside all three</div>
+      </div>
+      <div class="feat">
+        <div class="pic"><div class="ph"></div><div class="tag">01</div></div>
+        <h3>Imagine</h3>
+        <p>The wild, unconstrained phase. No wrong answers. You generate possibilities faster than you evaluate them — volume is the point, judgment comes later.</p>
+      </div>
+      <div class="feat">
+        <div class="pic"><div class="ph"></div><div class="tag">02</div></div>
+        <h3>Blueprint</h3>
+        <p>Turn the best idea into a plan. Sketch the structure, name the parts, assign the logic. A blueprint isn't a cage — it's a map that lets you move fast without getting lost.</p>
+      </div>
+      <div class="feat">
+        <div class="pic"><div class="ph"></div><div class="tag">03</div></div>
+        <h3>Build</h3>
+        <p>Make it real. The blueprint meets reality and the negotiation begins. What holds? What breaks? What becomes something no plan could have predicted?</p>
+      </div>
+    </div>
+    <div class="pagenum">04 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       05. COURSE MAP / SEMESTER ARC
+  ============================================================ -->
+  <section class="slide s-chart" data-label="05 Course Map">
+    <div class="frame">
+      <div class="pane-l">
+        <div>
+          <div class="label" style="opacity:.7; color:var(--paper); margin-bottom:24px">Section 03 / Arc</div>
+          <h2>Complexity<br />climbs.<br /><em>Confidence</em><br />follows.</h2>
+        </div>
+        <p>Each phase asks more of you — broader materials, harder crits, less scaffolding. By Week 12 you're not just finishing a project. You're defending a worldview.</p>
+        <div class="yearlabel">Weeks 1–12 · Difficulty indexed to Week 1</div>
+      </div>
+      <div class="pane-r">
+        <div class="legend">
+          <div class="li"><i></i> Skill demand</div>
+          <div class="li b"><i></i> Confidence gained</div>
+        </div>
+        <div class="bars">
+          <div class="bar"><div class="a" style="height:25%"></div><div class="b" style="height:15%"></div></div>
+          <div class="bar"><div class="a" style="height:45%"></div><div class="b" style="height:35%"></div></div>
+          <div class="bar"><div class="a" style="height:72%"></div><div class="b" style="height:62%"></div></div>
+          <div class="bar"><div class="a" style="height:95%"></div><div class="b" style="height:92%"></div></div>
+        </div>
+        <div class="xaxis">
+          <span>Phase 1<br />Ignition</span>
+          <span>Phase 2<br />Structure</span>
+          <span>Phase 3<br />Tension</span>
+          <span>Phase 4<br />Showcase</span>
+        </div>
+      </div>
+    </div>
+    <div class="pagenum invert">05 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       06. SECTION DIVIDER — THE WORK
+  ============================================================ -->
+  <section class="slide s-section" data-label="06 Section · The Work">
+    <div class="frame">
+      <div class="pane-num">
+        <div class="lab">Section · Craft</div>
+        <div class="n">02</div>
+        <div class="corner-mark" style="top:auto; bottom:22px; right:22px;" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="pane-title">
+        <div class="label" style="color:var(--paper); opacity:.7">How we actually work</div>
+        <h2>The blueprint<br />is not<br /><mark>the&nbsp;building.</mark></h2>
+        <p>Every project in Imaginarium follows the same five-stage process — from the first wild sketch to a defended, documented artifact. The process is the curriculum. Learn it deeply and it becomes your own.</p>
+      </div>
+    </div>
+    <div class="pagenum lemon">06 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       07. QUOTE
+  ============================================================ -->
+  <section class="slide s-quote" data-label="07 Voice">
+    <div class="frame">
+      <div class="photo">
+        <div class="ph"></div>
+        <div class="tag">IMAGINATION HAS ALWAYS HAD WINGS</div>
+      </div>
+      <div class="copy">
+        <div class="qmark">"</div>
+        <blockquote>You can't use up creativity. The more you use, the more you have.</blockquote>
+      </div>
+      <div class="attr">
+        <div class="role">Author & Poet</div>
+        <div class="who">Maya Angelou</div>
+      </div>
+      <div class="mark">
+        <div class="blockmark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      </div>
+    </div>
+    <div class="pagenum">07 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       08. WHAT TO DO TODAY — NEXT STEPS
+  ============================================================ -->
+  <section class="slide s-cta" data-label="08 What To Do Today">
+    <div class="frame">
+      <div class="head">
+        <div class="lab">Before you leave today</div>
+        <h2>Your first<br />moves</h2>
+      </div>
+      <div class="icon-block">
+        <div class="star">★</div>
+      </div>
+      <div class="step a">
+        <div class="num">01 · Today</div>
+        <h3>Write your first prompt</h3>
+        <p>In 3 sentences: describe a world you wish existed. No constraints — just the image. Bring it next session typed and printed.</p>
+        <div class="label">Due: Session 2</div>
+      </div>
+      <div class="step b">
+        <div class="num">02 · This week</div>
+        <h3>Find your reference</h3>
+        <p>One book, film, building, or game that shows you what it looks like when imagination and structure are both fully present. Be ready to present it in 90 seconds.</p>
+        <div class="label">Due: Session 3</div>
+      </div>
+      <div class="step c">
+        <div class="num" style="opacity:.7">03 · Ongoing</div>
+        <h3>Keep a blueprint journal</h3>
+        <p style="opacity:.85">Every week: one rough sketch of something you noticed, imagined, or couldn't figure out. Not polished. Just honest. This is your most important course artifact.</p>
+        <div class="arrow" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none" stroke="#E6FF3D" stroke-width="4"><path d="M8 32 H56 M40 16 L56 32 L40 48"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="pagenum">08 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       09. COURSE DEEP DIVE — THREE LENSES
+  ============================================================ -->
+  <section class="slide s-consult" data-label="09 The Three Lenses">
+    <div class="frame">
+      <div class="head">
+        <div class="tag">Deep dive · 09</div>
+        <h2>Imaginarium is not one course — it is three lenses on the same object, studied simultaneously until the object becomes <mark>visible.</mark></h2>
+      </div>
+      <div class="col a">
+        <h3>The conceptual lens</h3>
+        <div class="col-body">
+          <p><strong>We start with ideas</strong> — unmoored, unconditional, and untested. This lens asks: what is possible before constraints arrive?</p>
+          <ul>
+            <li><strong>Generative exercises</strong> — rapid-fire prompts designed to exhaust the obvious answers and reach the interesting ones.</li>
+            <li><strong>Cross-domain borrowing</strong> — taking a structure from biology, a rhythm from music, a logic from architecture.</li>
+            <li><strong>Failure catalogues</strong> — documenting every idea that didn't work and understanding why.</li>
+          </ul>
+        </div>
+        <div class="src">Weeks 1–4 · Pillar 01 / Imagine</div>
+      </div>
+      <div class="col b">
+        <h3>The structural lens</h3>
+        <div class="col-body">
+          <div class="meta">Blueprint is where chaos becomes something someone else can read.</div>
+          <p>Structure doesn't kill imagination. It gives imagination somewhere to live. Every great world has an underlying grammar — rules that make surprise possible.</p>
+          <p>In this lens we study how blueprints work across disciplines: floor plans, story structures, circuit diagrams, choreography notation, musical scores. What do they have in common?</p>
+        </div>
+        <div class="src">Weeks 5–8 · Pillar 02 / Blueprint</div>
+      </div>
+      <div class="col c">
+        <h3>The material lens</h3>
+        <div class="col-body">
+          <ul>
+            <li><strong>Making under constraint</strong> — build something real with only what is in the room.</li>
+            <li><strong>Iteration speed</strong> — three rough prototypes beat one polished draft every time.</li>
+            <li><strong>The gap report</strong> — a written account of where the blueprint met reality and what had to change.</li>
+            <li><strong>Public defense</strong> — every final build is presented to a crit panel including at least one person outside the course.</li>
+          </ul>
+        </div>
+        <div class="src">Weeks 9–12 · Pillar 03 / Build</div>
+      </div>
+    </div>
+    <div class="pagenum">09 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       10. LEARNING ARC CHART
+  ============================================================ -->
+  <section class="slide s-chart2" data-label="10 The Learning Arc">
+    <div class="frame">
+      <div class="pane-l">
+        <div>
+          <div class="label" style="margin-bottom:18px">Section · Progress</div>
+          <h2>The arc<br/>bends at<br/>week five.</h2>
+        </div>
+        <p>Students who commit to the blueprint journal in weeks 1–4 consistently outperform in the build phase. The habit of documenting thinking compounds faster than any single skill.</p>
+        <div class="legend">
+          <div class="li"><i style="background:var(--ink); height:2px"></i> Journal-light track</div>
+          <div class="li"><i style="background:var(--ink); height:5px"></i> Regular journal track</div>
+          <div class="li"><i style="background:var(--ink); height:8px"></i> Daily journal track</div>
+        </div>
+      </div>
+      <div class="pane-r">
+        <div class="yhead">Assessed project quality, by week</div>
+        <div class="plot">
+          <div class="yticks">
+            <span>High</span><span>Good</span><span>Fair</span><span>Low</span><span>Start</span>
+          </div>
+          <div class="gline" style="top:0%"></div>
+          <div class="gline" style="top:25%"></div>
+          <div class="gline" style="top:50%"></div>
+          <div class="gline" style="top:75%"></div>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <polyline fill="none" stroke="#0a0a0a" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2,1.5"
+              points="0,90 16,80 32,68 48,62 64,58 80,55 100,52" />
+            <polyline fill="none" stroke="#0a0a0a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
+              points="0,90 16,75 32,55 48,38 64,26 80,18 100,14" />
+            <polyline fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+              points="0,90 16,68 32,42 48,22 64,12 80,6 100,4" />
+            <circle cx="100" cy="4" r="2" fill="#E6FF3D" stroke="#0a0a0a" stroke-width="1"/>
+          </svg>
+        </div>
+        <div class="xticks">
+          <span>Wk 1</span><span>Wk 3</span><span>Wk 5</span><span>Wk 7</span><span>Wk 9</span><span>Wk 11</span><span>Wk 12</span>
+        </div>
+      </div>
+    </div>
+    <div class="pagenum lemon">10 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       11. PROJECT PROCESS — 5 STAGES
+  ============================================================ -->
+  <section class="slide s-process2" data-label="11 How a Project Works">
+    <div class="frame">
+      <div class="head">
+        <h2>How every project<br/>moves through<br/>the five stages.</h2>
+        <div class="sub">No project graduates to the next stage without a documented artifact from the current one. The output of each stage is the input of the next.</div>
+      </div>
+      <div class="node n1">
+        <div class="n">01 · Spark</div>
+        <h3>Generate</h3>
+        <p>Produce twenty ideas in one session. No filtering. Volume is the goal.</p>
+        <svg class="arr" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 16 H26 M20 9 L26 16 L20 23"/></svg>
+      </div>
+      <div class="node n2">
+        <div class="n">02 · Select</div>
+        <h3>Choose one</h3>
+        <p>Pick the idea that scares you most. Write one sentence explaining why.</p>
+        <svg class="arr" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 16 H26 M20 9 L26 16 L20 23"/></svg>
+      </div>
+      <div class="node n3">
+        <div class="n">03 · Map</div>
+        <h3>Blueprint it</h3>
+        <p>Sketch the structure. Name all the parts. Identify what you don't know yet.</p>
+        <svg class="arr" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 16 H26 M20 9 L26 16 L20 23"/></svg>
+      </div>
+      <div class="node n4">
+        <div class="n">04 · Make</div>
+        <h3>Build fast</h3>
+        <p>First version in two sessions. Rough is fine. Ship it to the crit table.</p>
+        <svg class="arr" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 16 H26 M20 9 L26 16 L20 23"/></svg>
+      </div>
+      <div class="node n5">
+        <div class="n">05 · Defend</div>
+        <h3>Explain it</h3>
+        <p>Present to the panel. Field every question. Update the blueprint to match reality.</p>
+        <svg class="arr" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 16 H26 M20 9 L26 16 L20 23"/></svg>
+      </div>
+      <div class="node out">
+        <div class="n" style="opacity:.7">Output</div>
+        <h3>Artifact</h3>
+        <p style="opacity:.85">A signed, documented work — blueprint and build, both submitted together.</p>
+      </div>
+      <div class="timeline">
+        <span>Day 1 · Generate</span>
+        <span>Day 2 · Select</span>
+        <span>Days 3–5 · Blueprint</span>
+        <span>Days 6–10 · Build</span>
+        <span>Day 11 · Crit</span>
+        <span style="border-right:0">Day 12 · Submit</span>
+      </div>
+    </div>
+    <div class="pagenum">11 / 12</div>
+  </section>
+
+  <!-- ============================================================
+       12. SKILLS MATRIX
+  ============================================================ -->
+  <section class="slide s-matrix2" data-label="12 Skills Matrix">
+    <div class="frame">
+      <div class="head">
+        <h2>What you'll<br/>be able to<br/>do by week 12.</h2>
+        <div class="sub">Skills are assessed across all three pillars in each of the four project types. A full mark requires evidence in the artifact, not just in the crit.</div>
+      </div>
+      <div class="table">
+        <div class="cell head-row">Skill</div>
+        <div class="cell head-row">Project 1<br/>Solo object</div>
+        <div class="cell head-row">Project 2<br/>System</div>
+        <div class="cell head-row">Project 3<br/>Showcase</div>
+
+        <div class="cell row-label">Generative thinking</div>
+        <div class="cell"><span class="pill yes">Core focus</span></div>
+        <div class="cell"><span class="pill part">Supported</span></div>
+        <div class="cell"><span class="pill yes">Independent</span></div>
+
+        <div class="cell row-label">Blueprint literacy</div>
+        <div class="cell"><span class="pill part">Introduced</span></div>
+        <div class="cell"><span class="pill yes">Core focus</span></div>
+        <div class="cell"><span class="pill yes">Independent</span></div>
+
+        <div class="cell row-label">Material craft</div>
+        <div class="cell"><span class="pill part">Guided</span></div>
+        <div class="cell"><span class="pill part">Guided</span></div>
+        <div class="cell"><span class="pill yes">Core focus</span></div>
+
+        <div class="cell row-label last">Public defense</div>
+        <div class="cell last"><span class="pill note">Peer crit only</span></div>
+        <div class="cell last"><span class="pill part">Mixed panel</span></div>
+        <div class="cell last"><span class="pill yes">Open showcase</span></div>
+      </div>
+    </div>
+    <div class="pagenum lemon">12 / 12</div>
+  </section>
+
+</deck-stage>
+
+</body>
+</html>
